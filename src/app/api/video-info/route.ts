@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare ytdl options with cookies if provided
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
     const ytdlOptions: any = {};
     if (cookies) {
       ytdlOptions.requestOptions = {
