@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YouTube Downloader
 
-## Getting Started
+A modern Next.js application for downloading YouTube videos as MP3 or MP4 files with quality selection options.
 
-First, run the development server:
+## Features
 
+- 🎥 Download YouTube videos in MP4 format
+- 🎵 Convert and download YouTube videos as MP3 audio files
+- 📊 Quality selection for both video and audio formats
+- 🖼️ Video information display with thumbnail, title, duration, and view count
+- 🌙 Dark mode support
+- 📱 Responsive design
+- ⚡ Built with Next.js 15 and TypeScript
+
+## Technology Stack
+
+- **Frontend**: Next.js 15, React, TypeScript
+- **Styling**: Tailwind CSS
+- **YouTube API**: ytdl-core
+- **Audio Processing**: fluent-ffmpeg
+- **Deployment**: Vercel-ready
+
+## Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd yt-downloader
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Learn More
+## Usage
 
-To learn more about Next.js, take a look at the following resources:
+1. **Enter YouTube URL**: Paste any valid YouTube URL (youtube.com or youtu.be)
+2. **Get Video Info**: Click "Get Info" to fetch video details and available formats
+3. **Select Format**: Choose between MP4 (video) or MP3 (audio only)
+4. **Choose Quality**: Select from available quality options
+5. **Download**: Click the download button to start the download
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Supported URL Formats
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `https://www.youtube.com/watch?v=VIDEO_ID`
+- `https://youtu.be/VIDEO_ID`
+- `https://www.youtube.com/embed/VIDEO_ID`
 
-## Deploy on Vercel
+## Quality Options
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Video (MP4)
+- Various resolutions: 144p, 240p, 360p, 480p, 720p, 1080p, 1440p, 2160p (4K)
+- Depends on original video quality
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Audio (MP3)
+- Multiple bitrates: 48kbps, 128kbps, 160kbps, etc.
+- Converted to MP3 format using FFmpeg
+
+## Development
+
+### Project Structure
+
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── video-info/     # API route for fetching video metadata
+│   │   └── download/       # API route for handling downloads
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx           # Main page component
+├── components/
+│   ├── YouTubeDownloader.tsx  # Main downloader component
+│   ├── URLInput.tsx          # URL input form
+│   ├── VideoInfoDisplay.tsx  # Video information display
+│   └── LoadingSpinner.tsx    # Loading indicator
+└── types/
+    └── youtube.ts           # TypeScript type definitions
+```
+
+### API Routes
+
+#### `/api/video-info`
+- **Method**: POST
+- **Body**: `{ url: string }`
+- **Response**: Video metadata including title, thumbnail, duration, and available formats
+
+#### `/api/download`
+- **Method**: POST
+- **Body**: `{ videoId: string, format: 'mp3' | 'mp4', quality: string, itag?: number }`
+- **Response**: File stream for download
+
+## Build for Production
+
+```bash
+npm run build
+npm start
+```
+
+## Deployment
+
+This project is configured for easy deployment on Vercel:
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Deploy automatically
+
+## Important Notes
+
+- **FFmpeg Requirement**: For MP3 conversion, FFmpeg must be available on the server
+- **Rate Limiting**: YouTube may rate limit requests; consider implementing caching
+- **Legal Compliance**: Ensure you comply with YouTube's Terms of Service and copyright laws
+- **Age Restrictions**: Age-restricted videos cannot be downloaded
+- **Private Videos**: Private or unavailable videos will return appropriate error messages
+
+## Limitations
+
+- No support for live streams
+- No support for age-restricted content
+- Download speed depends on YouTube's servers and your internet connection
+- Some videos may have limited format availability
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is for educational purposes. Please respect YouTube's Terms of Service and copyright laws when using this application.
