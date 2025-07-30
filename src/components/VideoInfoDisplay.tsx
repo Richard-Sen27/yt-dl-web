@@ -13,14 +13,21 @@ interface VideoInfoDisplayProps {
 export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }: VideoInfoDisplayProps) {
   const [selectedFormat, setSelectedFormat] = useState<'mp3' | 'mp4'>('mp4');
   const [selectedQuality, setSelectedQuality] = useState<string>('');
+  const [combineStreams, setCombineStreams] = useState<boolean>(true);
 
   // Filter formats based on selected format
   const availableFormats = videoInfo.formats.filter(format => {
     if (selectedFormat === 'mp3') {
       return format.hasAudio && !format.hasVideo;
     } else {
-      // For MP4, include all video formats (with or without audio)
-      return format.hasVideo;
+      // For MP4, include all video formats
+      // If combineStreams is enabled, include video-only formats too
+      if (combineStreams) {
+        return format.hasVideo;
+      } else {
+        // Only show formats with both video and audio
+        return format.hasVideo && format.hasAudio;
+      }
     }
   });
 
@@ -48,8 +55,13 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
             return `${format.audioBitrate || 128}kbps`;
           } else {
             const quality = format.qualityLabel || format.quality;
-            const hasAudio = format.hasAudio ? '' : ' (no audio)';
-            return `${quality}${hasAudio}`;
+            if (combineStreams && !format.hasAudio) {
+              return `${quality} (will combine with audio)`;
+            } else if (!format.hasAudio) {
+              return `${quality} (no audio)`;
+            } else {
+              return quality;
+            }
           }
         })
         .filter(Boolean)
@@ -64,8 +76,11 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
   const handleDownload = () => {
     if (!selectedQuality) return;
 
-    // Find the specific format - remove " (no audio)" suffix for comparison
-    const cleanQuality = selectedQuality.replace(' (no audio)', '');
+    // Find the specific format - remove suffixes for comparison
+    const cleanQuality = selectedQuality
+      .replace(' (will combine with audio)', '')
+      .replace(' (no audio)', '');
+    
     const selectedItag = sortedFormats.find(format => {
       if (selectedFormat === 'mp3') {
         return `${format.audioBitrate || 128}kbps` === selectedQuality;
@@ -78,6 +93,7 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
       format: selectedFormat,
       quality: selectedQuality,
       itag: selectedItag,
+      combineStreams: selectedFormat === 'mp4' ? combineStreams : undefined,
     });
   };
 
@@ -137,7 +153,7 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
           Download Options
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Format Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -157,6 +173,28 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
               <option value="mp3">Audio (MP3)</option>
             </select>
           </div>
+
+          {/* Combine Streams Option (only for MP4) */}
+          {selectedFormat === 'mp4' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Audio Handling
+              </label>
+              <select
+                value={combineStreams ? 'combine' : 'existing'}
+                onChange={(e) => {
+                  setCombineStreams(e.target.value === 'combine');
+                  setSelectedQuality(''); // Reset quality when option changes
+                }}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                         focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                         dark:bg-gray-700 dark:text-white"
+              >
+                <option value="combine">Combine with audio (HD)</option>
+                <option value="existing">Use existing audio only</option>
+              </select>
+            </div>
+          )}
 
           {/* Quality Selection */}
           <div>
@@ -180,7 +218,7 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
           </div>
 
           {/* Download Button */}
-          <div className="flex items-end">
+          <div className={`flex items-end ${selectedFormat === 'mp4' ? 'md:col-span-1' : 'md:col-span-2'}`}>
             <button
               onClick={handleDownload}
               disabled={!selectedQuality || downloading}
@@ -198,9 +236,16 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
           <p>
             {selectedFormat === 'mp4' ? 'Video formats' : 'Audio formats'}: {availableFormats.length} available
           </p>
-          {selectedFormat === 'mp4' && (
+          {selectedFormat === 'mp4' && combineStreams && (
             <p className="mt-1">
-              Note: Higher quality formats (720p+) may not include audio. YouTube serves these as separate streams.
+              ✨ <strong>HD Mode:</strong> High-quality video will be combined with the best available audio using FFmpeg. 
+              This may take longer but provides the best quality.
+            </p>
+          )}
+          {selectedFormat === 'mp4' && !combineStreams && (
+            <p className="mt-1">
+              ⚡ <strong>Fast Mode:</strong> Only formats with pre-combined video and audio. 
+              Quality may be limited but downloads are faster.
             </p>
           )}
         </div>

@@ -7,7 +7,11 @@ A modern Next.js application for downloading YouTube videos as MP3 or MP4 files 
 - 🎥 Download YouTube videos in MP4 format
 - 🎵 Convert and download YouTube videos as MP3 audio files
 - 📊 Quality selection for both video and audio formats
-- 🖼️ Video information display with thumbnail, title, duration, and view count
+- � **Smart Stream Combining**: Automatically combines high-quality video with audio using FFmpeg
+- ⚡ **Dual Mode Support**: 
+  - **HD Mode**: Combines separate video and audio streams for maximum quality (720p, 1080p, 4K)
+  - **Fast Mode**: Downloads pre-combined streams for faster processing
+- �🖼️ Video information display with thumbnail, title, duration, and view count
 - 🌙 Dark mode support
 - 📱 Responsive design
 - ⚡ Built with Next.js 15 and TypeScript
@@ -45,8 +49,26 @@ npm run dev
 1. **Enter YouTube URL**: Paste any valid YouTube URL (youtube.com or youtu.be)
 2. **Get Video Info**: Click "Get Info" to fetch video details and available formats
 3. **Select Format**: Choose between MP4 (video) or MP3 (audio only)
-4. **Choose Quality**: Select from available quality options
-5. **Download**: Click the download button to start the download
+4. **Choose Audio Handling** (MP4 only):
+   - **HD Mode**: Combines high-quality video with best audio (slower, higher quality)
+   - **Fast Mode**: Uses pre-combined streams only (faster, may limit quality)
+5. **Choose Quality**: Select from available quality options
+6. **Download**: Click the download button to start the download
+
+### Audio Handling Modes
+
+#### HD Mode (Combine with audio)
+- Downloads the highest quality video stream available (up to 4K)
+- Downloads the best quality audio stream separately
+- Uses FFmpeg to combine them into a single MP4 file
+- Provides maximum quality but takes longer to process
+- Ideal for: High-quality downloads, archival purposes
+
+#### Fast Mode (Use existing audio only)
+- Downloads only pre-combined video+audio streams
+- No server-side processing required
+- Faster downloads but quality may be limited (usually max 720p)
+- Ideal for: Quick downloads, lower bandwidth situations
 
 ## Supported URL Formats
 
@@ -58,7 +80,9 @@ npm run dev
 
 ### Video (MP4)
 - Various resolutions: 144p, 240p, 360p, 480p, 720p, 1080p, 1440p, 2160p (4K)
-- Depends on original video quality
+- **HD Mode**: Access to highest quality streams (up to 4K) with audio combining
+- **Fast Mode**: Pre-combined streams (typically up to 720p)
+- Depends on original video quality and YouTube's available formats
 
 ### Audio (MP3)
 - Multiple bitrates: 48kbps, 128kbps, 160kbps, etc.

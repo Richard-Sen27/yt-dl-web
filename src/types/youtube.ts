@@ -23,6 +23,7 @@ export interface DownloadOptions {
   format: 'mp3' | 'mp4';
   quality: string;
   itag?: number;
+  combineStreams?: boolean;
 }
 
 export interface DownloadProgress {
