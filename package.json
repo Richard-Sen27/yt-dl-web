@@ -1,5 +1,5 @@
 {
-  "name": "yt-downloader",
+  "name": "yt-dl-web",
   "version": "0.1.0",
   "private": true,
   "scripts": {

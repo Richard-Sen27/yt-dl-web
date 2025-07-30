@@ -5,12 +5,14 @@ import { VideoInfo, DownloadOptions } from '@/types/youtube';
 import URLInput from './URLInput';
 import VideoInfoDisplay from './VideoInfoDisplay';
 import LoadingSpinner from './LoadingSpinner';
+import Authentication from './Authentication';
 
 export default function YouTubeDownloader() {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [cookies, setCookies] = useState<string>('');
 
   const handleURLSubmit = async (url: string) => {
     setLoading(true);
@@ -23,7 +25,7 @@ export default function YouTubeDownloader() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, cookies: cookies || undefined }),
       });
 
       if (!response.ok) {
@@ -54,7 +56,10 @@ export default function YouTubeDownloader() {
         },
         body: JSON.stringify({
           videoId: videoInfo.videoId,
-          ...options,
+          format: options.format,
+          itag: options.itag,
+          combineStreams: options.combineStreams,
+          cookies: cookies || undefined,
         }),
       });
 
@@ -91,6 +96,8 @@ export default function YouTubeDownloader() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <Authentication onAuthChange={setCookies} />
+      
       <URLInput onSubmit={handleURLSubmit} disabled={loading || downloading} />
       
       {error && (
@@ -110,6 +117,7 @@ export default function YouTubeDownloader() {
           videoInfo={videoInfo} 
           onDownload={handleDownload}
           downloading={downloading}
+          cookies={cookies}
         />
       )}
     </div>

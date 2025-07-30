@@ -20,10 +20,11 @@ export interface VideoFormat {
 }
 
 export interface DownloadOptions {
-  format: 'mp3' | 'mp4';
+  format: 'mp3' | 'mp4' | 'video-only';
   quality: string;
   itag?: number;
   combineStreams?: boolean;
+  cookies?: string;
 }
 
 export interface DownloadProgress {

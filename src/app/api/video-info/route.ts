@@ -4,7 +4,7 @@ import { VideoInfo, VideoFormat } from '@/types/youtube';
 
 export async function POST(request: NextRequest) {
   try {
-    const { url } = await request.json();
+    const { url, cookies } = await request.json();
 
     if (!url) {
       return NextResponse.json(
@@ -21,8 +21,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Prepare ytdl options with cookies if provided
+    const ytdlOptions: any = {};
+    if (cookies) {
+      ytdlOptions.requestOptions = {
+        headers: {
+          'Cookie': cookies
+        }
+      };
+    }
+
     // Get video info
-    const info = await ytdl.getInfo(url);
+    const info = await ytdl.getInfo(url, ytdlOptions);
     const videoDetails = info.videoDetails;
 
     // Process formats
