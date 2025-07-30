@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ytdl from '@distube/ytdl-core';
+import ffmpeg from 'fluent-ffmpeg';
+import { PassThrough } from 'stream';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,15 +29,32 @@ export async function POST(request: NextRequest) {
     const videoTitle = info.videoDetails.title.replace(/[^\w\s]/gi, '').replace(/\s+/g, '_');
     
     if (format === 'mp4') {
-      // For MP4, find the best format with both video and audio
       let selectedFormat;
+      
       if (itag) {
         selectedFormat = info.formats.find(f => f.itag === itag);
       } else {
-        // Fallback to highest quality with video and audio
-        selectedFormat = info.formats
+        // First try to find formats with both video and audio, prioritizing quality
+        const combinedFormats = info.formats
           .filter(f => f.hasVideo && f.hasAudio)
-          .sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0))[0];
+          .sort((a, b) => {
+            const aHeight = parseInt(a.qualityLabel?.replace('p', '') || '0');
+            const bHeight = parseInt(b.qualityLabel?.replace('p', '') || '0');
+            return bHeight - aHeight;
+          });
+
+        if (combinedFormats.length > 0) {
+          selectedFormat = combinedFormats[0];
+        } else {
+          // Fallback to video-only format (note: this won't have audio)
+          selectedFormat = info.formats
+            .filter(f => f.hasVideo)
+            .sort((a, b) => {
+              const aHeight = parseInt(a.qualityLabel?.replace('p', '') || '0');
+              const bHeight = parseInt(b.qualityLabel?.replace('p', '') || '0');
+              return bHeight - aHeight;
+            })[0];
+        }
       }
 
       if (!selectedFormat) {

@@ -19,33 +19,42 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
     if (selectedFormat === 'mp3') {
       return format.hasAudio && !format.hasVideo;
     } else {
-      return format.hasVideo && format.hasAudio;
+      // For MP4, include all video formats (with or without audio)
+      return format.hasVideo;
     }
   });
 
-  // Get unique quality options
+  // Sort formats to prioritize those with both video and audio
+  const sortedFormats = availableFormats.sort((a, b) => {
+    if (selectedFormat === 'mp4') {
+      // Prioritize formats with audio
+      if (a.hasAudio && !b.hasAudio) return -1;
+      if (!a.hasAudio && b.hasAudio) return 1;
+      
+      // Then sort by quality
+      const aHeight = parseInt(a.qualityLabel?.replace('p', '') || '0');
+      const bHeight = parseInt(b.qualityLabel?.replace('p', '') || '0');
+      return bHeight - aHeight;
+    }
+    return 0;
+  });
+
+  // Get unique quality options with additional info
   const qualityOptions = Array.from(
     new Set(
-      availableFormats
-        .map(format => selectedFormat === 'mp3' 
-          ? `${format.audioBitrate || 128}kbps` 
-          : format.qualityLabel || format.quality)
+      sortedFormats
+        .map(format => {
+          if (selectedFormat === 'mp3') {
+            return `${format.audioBitrate || 128}kbps`;
+          } else {
+            const quality = format.qualityLabel || format.quality;
+            const hasAudio = format.hasAudio ? '' : ' (no audio)';
+            return `${quality}${hasAudio}`;
+          }
+        })
         .filter(Boolean)
     )
-  ).sort((a, b) => {
-    if (selectedFormat === 'mp3') {
-      const aNum = parseInt(a);
-      const bNum = parseInt(b);
-      return bNum - aNum; // Descending order for audio bitrate
-    } else {
-      // Video quality sorting (720p, 1080p, etc.)
-      const getResolution = (quality: string) => {
-        const match = quality.match(/(\d+)/);
-        return match ? parseInt(match[1]) : 0;
-      };
-      return getResolution(b) - getResolution(a);
-    }
-  });
+  );
 
   // Set default quality when format changes
   if ((!selectedQuality || !qualityOptions.includes(selectedQuality)) && qualityOptions.length > 0) {
@@ -55,12 +64,13 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
   const handleDownload = () => {
     if (!selectedQuality) return;
 
-    // Find the specific format
-    const selectedItag = availableFormats.find(format => {
+    // Find the specific format - remove " (no audio)" suffix for comparison
+    const cleanQuality = selectedQuality.replace(' (no audio)', '');
+    const selectedItag = sortedFormats.find(format => {
       if (selectedFormat === 'mp3') {
         return `${format.audioBitrate || 128}kbps` === selectedQuality;
       } else {
-        return (format.qualityLabel || format.quality) === selectedQuality;
+        return (format.qualityLabel || format.quality) === cleanQuality;
       }
     })?.itag;
 
@@ -188,6 +198,11 @@ export default function VideoInfoDisplay({ videoInfo, onDownload, downloading }:
           <p>
             {selectedFormat === 'mp4' ? 'Video formats' : 'Audio formats'}: {availableFormats.length} available
           </p>
+          {selectedFormat === 'mp4' && (
+            <p className="mt-1">
+              Note: Higher quality formats (720p+) may not include audio. YouTube serves these as separate streams.
+            </p>
+          )}
         </div>
       </div>
     </div>
